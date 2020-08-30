@@ -21,7 +21,7 @@ env = gym.make('SlimeVolley-v0')
 obs_dim = env.observation_space.shape[0]
 act_dim = env.action_space.n
 
-policy_net = mlp(sizes=[obs_dim, 32, act_dim])
+policy_net = mlp(sizes=[obs_dim, 8, 8, 8, act_dim])
 optimizer = Adam(policy_net.parameters(), lr=1e-2)
 
 batch_size = 5000
@@ -44,7 +44,8 @@ def train_one_epoch(render=True):
     episode_act = []
     episode_rew = []
     episode_ret = []
-    episode_len = []
+
+    episode_win = []
     while True:
         if render:
             env.render()
@@ -71,7 +72,7 @@ def train_one_epoch(render=True):
             #episode_ret += reward_ever(episode_rew)
             episode_ret += reward_to_go(episode_rew)
 
-            episode_len.append(len(episode_rew))
+            episode_win.append(sum(episode_rew))
             episode_rew = []
 
             observation = env.reset()
@@ -91,16 +92,16 @@ def train_one_epoch(render=True):
     loss.backward()
     optimizer.step()
 
-    return loss.item(), sum(episode_len) / len(episode_len), train_ret.mean()
+    return loss.item(), train_ret.mean(), sum(episode_win) / len(episode_win)
 
 render = False
 for epoch in range(5000):
-    loss, frames, Return = train_one_epoch(render=render)
+    Loss, Return, Wins = train_one_epoch(render=render)
 
-    #render = True if epoch > 40 else False
-    render = True if Return >= -4.0 else False
+    #render = True if epoch > 80 else False
+    render = True if Wins >= -2.5 else False
 
-    print(f'epoch: {epoch} \t loss: {loss:.2f} \t return: {Return:.2f} \t frames: {frames:.2f}')
+    print(f'epoch: {epoch} \t loss: {Loss:.2f} \t return: {Return:.2f} \t Wins: {Wins:.2f}')
 
 print('Closing...')
 env.close()

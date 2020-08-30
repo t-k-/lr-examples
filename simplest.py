@@ -26,6 +26,17 @@ optimizer = Adam(policy_net.parameters(), lr=1e-2)
 
 batch_size = 5000
 
+def reward_to_go(rewards):
+    n = len(rewards)
+    acc = [0] * n
+    for i in reversed(range(n)):
+        acc[i] = rewards[i] + (acc[i+1] if i+1 < n else 0)
+    return acc
+
+def reward_ever(rewards):
+    Return = sum(rewards)
+    return [Return] * len(rewards)
+
 def train_one_epoch(render=True):
     observation = env.reset()
 
@@ -57,11 +68,10 @@ def train_one_epoch(render=True):
         episode_rew.append(reward)
 
         if done:
-            Return = sum(episode_rew)
-            Length = len(episode_rew)
-            episode_ret += [Return] * Length
-            episode_len.append(Length)
+            #episode_ret += reward_ever(episode_rew)
+            episode_ret += reward_to_go(episode_rew)
 
+            episode_len.append(len(episode_rew))
             episode_rew = []
 
             observation = env.reset()

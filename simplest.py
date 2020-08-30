@@ -15,13 +15,15 @@ def mlp(sizes, activation=nn.Tanh):
     return nn.Sequential(*layers)
 
 
-env = gym.make('SlimeVolley-v0')
+#env = gym.make('SlimeVolley-v0')
+env = gym.make('LunarLander-v2')
 #env = gym.make('CartPole-v0')
 
 obs_dim = env.observation_space.shape[0]
 act_dim = env.action_space.n
 
-policy_net = mlp(sizes=[obs_dim, 8, 8, 8, act_dim])
+policy_net = mlp(sizes=[obs_dim, 16, 32, 16, act_dim])
+
 optimizer = Adam(policy_net.parameters(), lr=1e-2)
 
 batch_size = 5000
@@ -58,9 +60,9 @@ def train_one_epoch(render=True):
         logits = policy_net(observation)
         act = Categorical(logits=logits).sample().item()
 
-        #multi_binary_act_input = act
-        multi_binary_act_input = [0] * act_dim
-        multi_binary_act_input[act] = 1;
+        multi_binary_act_input = act
+        #multi_binary_act_input = [0] * act_dim
+        #multi_binary_act_input[act] = 1;
 
         # take action
         observation, reward, done, _ = env.step(multi_binary_act_input)
@@ -98,8 +100,8 @@ render = False
 for epoch in range(5000):
     Loss, Return, Wins = train_one_epoch(render=render)
 
-    #render = True if epoch > 80 else False
-    render = True if Wins >= -2.5 else False
+    #render = True if epoch >= 40 else False
+    render = True if Wins >= -10 else False
 
     print(f'epoch: {epoch} \t loss: {Loss:.2f} \t return: {Return:.2f} \t Wins: {Wins:.2f}')
 
